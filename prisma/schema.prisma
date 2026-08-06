@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// A Handlebars template. `variables` describes the fill-in-the-blank fields
+// the template exposes (key/label/defaultValue), used to build the
+// generation form dynamically.
+model Template {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  content       String // Handlebars source (HTML)
+  headerContent String? // Handlebars source repeated on every PDF page (no external CSS, inline styles only)
+  footerContent String? // Handlebars source repeated on every PDF page (no external CSS, inline styles only)
+  helpersScript String? // JS assigning to `helpers.*`, shared by content/headerContent/footerContent
+  variables     Json     @default("[]") // TemplateVariable[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  generations Generation[]
+}
+
+// An uploaded image/file, stored and served via Maalgaadi.
+model Asset {
+  id          String   @id @default(cuid())
+  fileId      String   @unique // Maalgaadi file id
+  filename    String
+  contentType String
+  size        Int
+  createdAt   DateTime @default(now())
+}
+
+// A saved, rendered instance of a template with a specific set of variable
+// values. `html` is a snapshot of the render at creation time, so later edits
+// to the template don't change past generations. PDF export format is chosen
+// at download time, not stored here.
+model Generation {
+  id         String   @id @default(cuid())
+  name       String
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  variables  Json // values used to render, keyed by variable key
+  html       String // rendered HTML snapshot
+  headerHtml String? // rendered header snapshot, repeated on every PDF page
+  footerHtml String? // rendered footer snapshot, repeated on every PDF page
+  createdAt  DateTime @default(now())
+
+  @@index([templateId])
+}
