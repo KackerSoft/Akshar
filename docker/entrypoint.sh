@@ -2,6 +2,6 @@
 set -e
 
 echo "Applying database migrations..."
-pnpm exec prisma migrate deploy
+node_modules/.bin/prisma migrate deploy
 
 exec "$@"

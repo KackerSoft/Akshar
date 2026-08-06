@@ -35,7 +35,10 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 # Fixed, known path so it can be chown'd to the non-root user below.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN groupadd --system nodejs && useradd --system --gid nodejs nextjs
+ENV HOME=/home/nextjs
+# --system alone leaves $HOME unwritable, which breaks anything that caches
+# to it (e.g. corepack); --create-home gives it a real, own(-able) home dir.
+RUN groupadd --system nodejs && useradd --system --create-home --home-dir /home/nextjs --gid nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
@@ -51,9 +54,11 @@ COPY docker/entrypoint.sh /entrypoint.sh
 RUN npx playwright-core install --with-deps chromium \
   && apt-get clean && rm -rf /var/lib/apt/lists/* \
   && chmod +x /entrypoint.sh \
-  && chown -R nextjs:nodejs /app /ms-playwright
+  && chown -R nextjs:nodejs /app /ms-playwright /home/nextjs
 
 USER nextjs
 EXPOSE 3000
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["pnpm", "start"]
+# Invoke the binary directly rather than via `pnpm start`/corepack, which
+# needs a writable $HOME to resolve the package manager at runtime.
+CMD ["node_modules/.bin/next", "start"]
