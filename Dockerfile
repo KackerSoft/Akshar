@@ -18,13 +18,9 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not
-# read at container runtime — must be passed as --build-arg (or compose
-# build.args), env_file alone won't reach them.
-ARG NEXT_PUBLIC_MAALGAADI_ENDPOINT
-ARG NEXT_PUBLIC_MAALGAADI_API_ENDPOINT
-ENV NEXT_PUBLIC_MAALGAADI_ENDPOINT=$NEXT_PUBLIC_MAALGAADI_ENDPOINT
-ENV NEXT_PUBLIC_MAALGAADI_API_ENDPOINT=$NEXT_PUBLIC_MAALGAADI_API_ENDPOINT
+# NEXT_PUBLIC_* vars are inlined at build time via Next's own .env/.env.local
+# loading (both files are already present in the build context) — declaring
+# them as ARG/ENV here would predefine them as empty and shadow that loading.
 RUN pnpm exec prisma generate
 RUN pnpm build
 
