@@ -17,8 +17,7 @@ jobs:
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           script: |
             set -e
-            cd /apps/akshar
-            git fetch origin production
+            cd apps/akshar
             git pull origin production
             docker compose build
             docker compose run --rm akshar pnpm exec prisma migrate deploy
