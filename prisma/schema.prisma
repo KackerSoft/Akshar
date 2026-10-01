@@ -23,7 +23,7 @@ model Template {
   headerContent String? // Handlebars source repeated on every PDF page (no external CSS, inline styles only)
   footerContent String? // Handlebars source repeated on every PDF page (no external CSS, inline styles only)
   helpersScript String? // JS assigning to `helpers.*`, shared by content/headerContent/footerContent
-  variables     Json     @default("[]") // TemplateVariable[]
+  variables     Json     @default("[]") // TemplateVariable[] (text or array/table variables)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

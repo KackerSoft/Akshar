@@ -11,7 +11,7 @@ Create Handlebars templates, fill them in as "generations", and download them as
 
 ## Getting started
 
-1. Copy `.env.example` to `.env` and fill in the values:
+1. Default environment variables live in `.env`. To override any of them locally, create a `.env.local` file:
    - `PASSWORD` — the shared login password.
    - `DATABASE_URL` — Postgres connection string.
    - `NEXT_PUBLIC_MAALGAADI_ENDPOINT`, `NEXT_PUBLIC_MAALGAADI_API_ENDPOINT`, `MAALGAADI_API_KEY` — Maalgaadi file storage credentials (optional; the Assets page shows a setup notice until these are set).

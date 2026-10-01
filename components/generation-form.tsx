@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -19,13 +19,14 @@ import {
 import { API, type FieldErrors } from "@/lib/api";
 import type { GenerationSerialized } from "@/lib/serializers/generation";
 import type { TemplateSerialized } from "@/lib/serializers/template";
+import type { TemplateColumn, TemplateRow, VariableValues } from "@/lib/types/template";
 import { buildHelpers, getDefaultVariableValues, renderTemplate } from "@/lib/utils/template";
 
 export function GenerationForm({ templates }: { templates: TemplateSerialized[] }) {
   const router = useRouter();
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
   const [name, setName] = useState("");
-  const [values, setValues] = useState<Record<string, string>>(() =>
+  const [values, setValues] = useState<VariableValues>(() =>
     getDefaultVariableValues(templates[0]?.variables ?? []),
   );
 
@@ -35,6 +36,35 @@ export function GenerationForm({ templates }: { templates: TemplateSerialized[] 
     setTemplateId(id);
     const selected = templates.find((t) => t.id === id);
     setValues(getDefaultVariableValues(selected?.variables ?? []));
+  }
+
+  function updateTextValue(key: string, value: string) {
+    setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function addRow(key: string, columns: TemplateColumn[]) {
+    setValues((prev) => {
+      const rows = Array.isArray(prev[key]) ? (prev[key] as TemplateRow[]) : [];
+      const row = Object.fromEntries(columns.map((c) => [c.key, c.defaultValue ?? ""]));
+      return { ...prev, [key]: [...rows, row] };
+    });
+  }
+
+  function removeRow(key: string, rowIndex: number) {
+    setValues((prev) => {
+      const rows = Array.isArray(prev[key]) ? (prev[key] as TemplateRow[]) : [];
+      return { ...prev, [key]: rows.filter((_, i) => i !== rowIndex) };
+    });
+  }
+
+  function updateCell(key: string, rowIndex: number, columnKey: string, value: string) {
+    setValues((prev) => {
+      const rows = Array.isArray(prev[key]) ? (prev[key] as TemplateRow[]) : [];
+      return {
+        ...prev,
+        [key]: rows.map((row, i) => (i === rowIndex ? { ...row, [columnKey]: value } : row)),
+      };
+    });
   }
 
   const preview = useMemo(() => {
@@ -116,18 +146,73 @@ export function GenerationForm({ templates }: { templates: TemplateSerialized[] 
       {template && template.variables.length > 0 && (
         <div className="flex flex-col gap-4 rounded-lg border p-4">
           <h3 className="text-sm font-medium">Variables</h3>
-          {template.variables.map((variable) => (
-            <div key={variable.key} className="flex flex-col gap-2">
-              <Label htmlFor={`var-${variable.key}`}>{variable.label || variable.key}</Label>
-              <Input
-                id={`var-${variable.key}`}
-                value={values[variable.key] ?? ""}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, [variable.key]: event.target.value }))
-                }
-              />
-            </div>
-          ))}
+          {template.variables.map((variable) =>
+            variable.type === "array" ? (
+              <div key={variable.key} className="flex flex-col gap-2">
+                <Label>{variable.label || variable.key}</Label>
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        {variable.columns.map((column) => (
+                          <th key={column.key} className="p-2 text-left font-medium">
+                            {column.label || column.key}
+                          </th>
+                        ))}
+                        <th className="w-10 p-2" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {((values[variable.key] as TemplateRow[]) ?? []).map((row, rowIndex) => (
+                        <tr key={rowIndex} className="border-b last:border-b-0">
+                          {variable.columns.map((column) => (
+                            <td key={column.key} className="p-1.5">
+                              <Input
+                                value={row[column.key] ?? ""}
+                                onChange={(event) =>
+                                  updateCell(variable.key, rowIndex, column.key, event.target.value)
+                                }
+                              />
+                            </td>
+                          ))}
+                          <td className="p-1.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="shrink-0 text-destructive hover:text-destructive"
+                              onClick={() => removeRow(variable.key, rowIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => addRow(variable.key, variable.columns)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add row
+                </Button>
+              </div>
+            ) : (
+              <div key={variable.key} className="flex flex-col gap-2">
+                <Label htmlFor={`var-${variable.key}`}>{variable.label || variable.key}</Label>
+                <Input
+                  id={`var-${variable.key}`}
+                  value={(values[variable.key] as string) ?? ""}
+                  onChange={(event) => updateTextValue(variable.key, event.target.value)}
+                />
+              </div>
+            ),
+          )}
         </div>
       )}
 

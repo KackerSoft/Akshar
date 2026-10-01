@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import vm from "node:vm";
 
-import type { TemplateVariable } from "@/lib/types/template";
+import type { TemplateVariable, VariableValues } from "@/lib/types/template";
 
 export type HelperMap = Record<string, Handlebars.HelperDelegate>;
 
@@ -29,7 +29,7 @@ export function buildHelpers(script: string): { helpers: HelperMap; error?: stri
 
 export function renderTemplate(
   content: string,
-  variables: Record<string, string>,
+  variables: VariableValues,
   helpers: HelperMap = {},
 ): { html: string; error?: string } {
   const instance = Handlebars.create();
@@ -49,8 +49,16 @@ export function renderTemplate(
 /** Build a variables record from a template's variable definitions, using their defaults. */
 export function getDefaultVariableValues(
   variables: TemplateVariable[],
-): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const variable of variables) values[variable.key] = variable.defaultValue ?? "";
+): VariableValues {
+  const values: VariableValues = {};
+  for (const variable of variables) {
+    if (variable.type === "array") {
+      values[variable.key] = [
+        Object.fromEntries(variable.columns.map((column) => [column.key, column.defaultValue ?? ""])),
+      ];
+    } else {
+      values[variable.key] = variable.defaultValue ?? "";
+    }
+  }
   return values;
 }
