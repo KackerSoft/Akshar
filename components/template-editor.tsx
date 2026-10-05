@@ -42,7 +42,7 @@ import type { TemplateSerialized } from "@/lib/serializers/template";
 import type { TemplateColumn, TemplateVariable } from "@/lib/types/template";
 import {
   buildHelpers,
-  getDefaultVariableValues,
+  getExampleVariableValues,
   renderTemplate,
 } from "@/lib/utils/template";
 
@@ -171,7 +171,7 @@ export function TemplateEditor({
   const current = fieldConfig[activeField];
 
   const { html: previewHtml, error: renderError } = useMemo(() => {
-    const values = getDefaultVariableValues(variables);
+    const values = getExampleVariableValues(variables);
     const { helpers, error: helpersError } = buildHelpers(helpersScript);
     if (helpersError) return { html: "", error: `Script: ${helpersError}` };
 
@@ -196,10 +196,7 @@ export function TemplateEditor({
   }, [content, headerContent, footerContent, helpersScript, variables]);
 
   function addVariable() {
-    setVariables((prev) => [
-      ...prev,
-      { type: "text", key: "", label: "", defaultValue: "" },
-    ]);
+    setVariables((prev) => [...prev, { type: "text", key: "", label: "" }]);
   }
 
   function updateVariable(index: number, patch: Partial<TemplateVariable>) {
@@ -219,10 +216,10 @@ export function TemplateEditor({
             type: "array",
             key: v.key,
             label: v.label,
-            columns: [{ key: "", label: "", defaultValue: "" }],
+            columns: [{ key: "", label: "" }],
           };
         }
-        return { type: "text", key: v.key, label: v.label, defaultValue: "" };
+        return { type: "text", key: v.key, label: v.label };
       }),
     );
   }
@@ -235,7 +232,7 @@ export function TemplateEditor({
     setVariables((prev) =>
       prev.map((v, i) =>
         i === variableIndex && v.type === "array"
-          ? { ...v, columns: [...v.columns, { key: "", label: "", defaultValue: "" }] }
+          ? { ...v, columns: [...v.columns, { key: "", label: "" }] }
           : v,
       ),
     );
@@ -445,11 +442,11 @@ export function TemplateEditor({
                     />
                     {variable.type !== "array" && (
                       <Input
-                        value={variable.defaultValue ?? ""}
+                        value={variable.example ?? ""}
                         onChange={(e) =>
-                          updateVariable(index, { defaultValue: e.target.value })
+                          updateVariable(index, { example: e.target.value })
                         }
-                        placeholder="Default value (optional)"
+                        placeholder="Example value (optional)"
                       />
                     )}
                     <Button
@@ -470,7 +467,10 @@ export function TemplateEditor({
                         <code>{"{{this.columnKey}}"}</code>.
                       </p>
                       {variable.columns.map((column, columnIndex) => (
-                        <div key={columnIndex} className="flex items-center gap-2">
+                        <div
+                          key={columnIndex}
+                          className="flex items-center gap-2"
+                        >
                           <Input
                             value={column.key}
                             onChange={(e) =>
@@ -491,13 +491,13 @@ export function TemplateEditor({
                             placeholder="Column label"
                           />
                           <Input
-                            value={column.defaultValue ?? ""}
+                            value={column.example ?? ""}
                             onChange={(e) =>
                               updateColumn(index, columnIndex, {
-                                defaultValue: e.target.value,
+                                example: e.target.value,
                               })
                             }
-                            placeholder="Default value (optional)"
+                            placeholder="Example value (optional)"
                           />
                           <Button
                             type="button"

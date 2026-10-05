@@ -6,7 +6,10 @@ import type { TemplateVariable, VariableValues } from "@/lib/types/template";
 export type HelperMap = Record<string, Handlebars.HelperDelegate>;
 
 /** Runs an author-supplied helpers script (assigning to `helpers.*`) in a throwaway vm context. */
-export function buildHelpers(script: string): { helpers: HelperMap; error?: string } {
+export function buildHelpers(script: string): {
+  helpers: HelperMap;
+  error?: string;
+} {
   if (!script.trim()) return { helpers: {} };
 
   const sandbox: { helpers: Record<string, unknown> } = { helpers: {} };
@@ -16,13 +19,17 @@ export function buildHelpers(script: string): { helpers: HelperMap; error?: stri
   } catch (error) {
     return {
       helpers: {},
-      error: error instanceof Error ? error.message : "Failed to evaluate helpers script",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to evaluate helpers script",
     };
   }
 
   const helpers: HelperMap = {};
   for (const [name, value] of Object.entries(sandbox.helpers)) {
-    if (typeof value === "function") helpers[name] = value as Handlebars.HelperDelegate;
+    if (typeof value === "function")
+      helpers[name] = value as Handlebars.HelperDelegate;
   }
   return { helpers };
 }
@@ -33,7 +40,8 @@ export function renderTemplate(
   helpers: HelperMap = {},
 ): { html: string; error?: string } {
   const instance = Handlebars.create();
-  for (const [name, fn] of Object.entries(helpers)) instance.registerHelper(name, fn);
+  for (const [name, fn] of Object.entries(helpers))
+    instance.registerHelper(name, fn);
 
   try {
     const compiled = instance.compile(content);
@@ -41,23 +49,65 @@ export function renderTemplate(
   } catch (error) {
     return {
       html: "",
-      error: error instanceof Error ? error.message : "Failed to render template",
+      error:
+        error instanceof Error ? error.message : "Failed to render template",
     };
   }
 }
 
-/** Build a variables record from a template's variable definitions, using their defaults. */
-export function getDefaultVariableValues(
+/** Build an empty variables record from a template's variable definitions. */
+export function getEmptyVariableValues(
   variables: TemplateVariable[],
 ): VariableValues {
   const values: VariableValues = {};
   for (const variable of variables) {
     if (variable.type === "array") {
       values[variable.key] = [
-        Object.fromEntries(variable.columns.map((column) => [column.key, column.defaultValue ?? ""])),
+        Object.fromEntries(variable.columns.map((column) => [column.key, ""])),
       ];
     } else {
-      values[variable.key] = variable.defaultValue ?? "";
+      values[variable.key] = "";
+    }
+  }
+  return values;
+}
+
+/** Variables filled with each variable's/column's example value, for previewing a template. */
+export function getExampleVariableValues(
+  variables: TemplateVariable[],
+): VariableValues {
+  const values: VariableValues = {};
+  for (const variable of variables) {
+    if (variable.type === "array") {
+      values[variable.key] = [
+        Object.fromEntries(
+          variable.columns.map((column) => [column.key, column.example ?? ""]),
+        ),
+      ];
+    } else {
+      values[variable.key] = variable.example ?? "";
+    }
+  }
+  return values;
+}
+
+/** Overlay preset values onto an empty record, ignoring keys/columns the template no longer defines. */
+export function applyPresetValues(
+  variables: TemplateVariable[],
+  preset: VariableValues,
+): VariableValues {
+  const values = getEmptyVariableValues(variables);
+  for (const variable of variables) {
+    const saved = preset[variable.key];
+    if (variable.type === "array") {
+      if (!Array.isArray(saved)) continue;
+      values[variable.key] = saved.map((row) =>
+        Object.fromEntries(
+          variable.columns.map((column) => [column.key, row[column.key] ?? ""]),
+        ),
+      );
+    } else if (typeof saved === "string") {
+      values[variable.key] = saved;
     }
   }
   return values;

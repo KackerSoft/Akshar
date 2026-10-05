@@ -32,7 +32,7 @@ export function AddTemplateDialog() {
         name,
         description: description || undefined,
         content: "<p>Hello {{name}}!</p>",
-        variables: [{ key: "name", label: "Name", defaultValue: "World" }],
+        variables: [{ key: "name", label: "Name" }],
       }),
     onSuccess: (template) => {
       setOpen(false);
@@ -62,8 +62,8 @@ export function AddTemplateDialog() {
           <DialogHeader>
             <DialogTitle>New template</DialogTitle>
             <DialogDescription>
-              Create a new Handlebars template. You&apos;ll edit the content
-              and variables next.
+              Create a new Handlebars template. You&apos;ll edit the content and
+              variables next.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -82,7 +82,9 @@ export function AddTemplateDialog() {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="template-description">Description (optional)</Label>
+              <Label htmlFor="template-description">
+                Description (optional)
+              </Label>
               <Input
                 id="template-description"
                 value={description}
@@ -90,7 +92,9 @@ export function AddTemplateDialog() {
                 placeholder="What is this template for?"
               />
               {errors.description?.[0] && (
-                <p className="text-sm text-destructive">{errors.description[0]}</p>
+                <p className="text-sm text-destructive">
+                  {errors.description[0]}
+                </p>
               )}
             </div>
           </div>

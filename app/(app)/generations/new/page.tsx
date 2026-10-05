@@ -1,11 +1,15 @@
 import { GenerationForm } from "@/components/generation-form";
 import { prisma } from "@/lib/prisma";
+import { presetSerializer } from "@/lib/serializers/preset";
 import { templateSerializer } from "@/lib/serializers/template";
 
 export default async function NewGenerationPage() {
   const templates = (
     await prisma.template.findMany({ orderBy: { createdAt: "desc" } })
   ).map(templateSerializer);
+  const presets = (
+    await prisma.preset.findMany({ orderBy: { name: "asc" } })
+  ).map(presetSerializer);
 
   return (
     <div className="mx-auto w-full max-w-3xl p-6">
@@ -14,7 +18,7 @@ export default async function NewGenerationPage() {
         Pick a template, fill in the variables, and save.
       </p>
       <div className="mt-6">
-        <GenerationForm templates={templates} />
+        <GenerationForm templates={templates} presets={presets} />
       </div>
     </div>
   );

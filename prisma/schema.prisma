@@ -13,7 +13,7 @@ datasource db {
 }
 
 // A Handlebars template. `variables` describes the fill-in-the-blank fields
-// the template exposes (key/label/defaultValue), used to build the
+// the template exposes (key/label), used to build the
 // generation form dynamically.
 model Template {
   id            String   @id @default(cuid())
@@ -28,6 +28,21 @@ model Template {
   updatedAt     DateTime @updatedAt
 
   generations Generation[]
+  presets     Preset[]
+}
+
+// A named set of variable values for a template, used to prefill the
+// generation form (e.g. one preset per customer).
+model Preset {
+  id         String   @id @default(cuid())
+  name       String
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  values     Json // VariableValues, keyed by variable key
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([templateId])
 }
 
 // An uploaded image/file, stored and served via Maalgaadi.

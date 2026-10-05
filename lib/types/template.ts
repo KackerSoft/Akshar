@@ -3,7 +3,8 @@ export interface TemplateColumn {
   key: string;
   /** Human-friendly column header shown in the generation form. */
   label: string;
-  defaultValue?: string;
+  /** Sample value for the editor preview and as a placeholder in the generation form. */
+  example?: string;
 }
 
 export interface TextTemplateVariable {
@@ -12,7 +13,7 @@ export interface TextTemplateVariable {
   key: string;
   /** Human-friendly label shown in the generation form. */
   label: string;
-  defaultValue?: string;
+  example?: string;
 }
 
 /** A repeatable table of rows, e.g. invoice line items. Rendered with `{{#each key}}...{{/each}}`. */

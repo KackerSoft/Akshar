@@ -1,6 +1,7 @@
 import { assetsApi } from "./assets";
 import { authApi } from "./auth";
 import { generationsApi } from "./generations";
+import { presetsApi } from "./presets";
 import { templatesApi } from "./templates";
 
 export { request, type FieldErrors } from "./client";
@@ -10,4 +11,5 @@ export const API = {
   templates: templatesApi,
   assets: assetsApi,
   generations: generationsApi,
+  presets: presetsApi,
 };

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const variableValueSchema = z.union([
+export const variableValueSchema = z.union([
   z.string(),
   z.array(z.record(z.string(), z.string())),
 ]);

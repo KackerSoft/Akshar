@@ -12,7 +12,7 @@ const identifierSchema = (label: string) =>
 export const templateColumnSchema = z.object({
   key: identifierSchema("Column key"),
   label: z.string().min(1, "Column label is required"),
-  defaultValue: z.string().optional(),
+  example: z.string().optional(),
 });
 
 // Array variant checked first since it requires the "array" literal; a plain
@@ -28,7 +28,7 @@ export const templateVariableSchema = z.union([
     type: z.literal("text").optional(),
     key: identifierSchema("Variable key"),
     label: z.string().min(1, "Variable label is required"),
-    defaultValue: z.string().optional(),
+    example: z.string().optional(),
   }),
 ]);
 
